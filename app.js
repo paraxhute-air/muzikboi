@@ -498,44 +498,73 @@ function detectBPMBackground(buffer) {
     
     const workerBlob = new Blob([`
         self.onmessage = function(e) {
-            const data = e.data.channelData;
-            const sampleRate = e.data.sampleRate;
+            const rawData = e.data.channelData;
+            const originalSampleRate = e.data.sampleRate;
             
-            // 1. Decimate to lower resolution (approx 10ms blocks) for enormous speedup
-            const blockSize = Math.floor(sampleRate / 100); 
-            let envelope = new Float32Array(Math.floor(data.length / blockSize));
-            for (let i = 0; i < envelope.length; i++) {
+            // 1. 다운샘플링 적용 (11,025Hz): 분석 데이터 양 축소
+            const targetSampleRate = 11025;
+            const ratio = originalSampleRate / targetSampleRate;
+            const downsampledLength = Math.floor(rawData.length / ratio);
+            let downsampled = new Float32Array(downsampledLength);
+            
+            for (let i = 0; i < downsampledLength; i++) {
+                let start = Math.floor(i * ratio);
+                let end = Math.floor((i + 1) * ratio);
                 let sum = 0;
-                for (let j = 0; j < blockSize; j++) {
-                    sum += Math.abs(data[i * blockSize + j]); 
+                let count = end - start;
+                for (let j = start; j < end; j++) {
+                    sum += rawData[j];
                 }
-                envelope[i] = sum / blockSize;
+                downsampled[i] = count > 0 ? sum / count : 0;
+            }
+
+            // 2. 에너지 기반 Onset 검출: 에너지가 급격히 변하는 지점 추출
+            const windowSize = 256; 
+            const hopSize = 32;     // 겹침 구간을 늘려 정밀한 1 BPM 단위 오차까지 계산 가능하게 함
+            const envelopeLength = Math.floor((downsampled.length - windowSize) / hopSize);
+            let energyEnvelope = new Float32Array(envelopeLength);
+            
+            for (let i = 0; i < envelopeLength; i++) {
+                let energy = 0;
+                let offset = i * hopSize;
+                for (let j = 0; j < windowSize; j++) {
+                    let sample = downsampled[offset + j];
+                    energy += sample * sample; // 소리 진폭의 제곱 = 에너지
+                }
+                energyEnvelope[i] = energy;
             }
             
-            // 2. High-pass filter / First Derivative (Onset Detection)
-            let onsets = new Float32Array(envelope.length);
-            for (let i = 1; i < envelope.length; i++) {
-                onsets[i] = Math.max(0, envelope[i] - envelope[i-1]); 
+            // 에너지의 미분(차분)을 통해 타격(Onset) 순간 파악
+            let onsets = new Float32Array(envelopeLength);
+            for (let i = 1; i < envelopeLength; i++) {
+                let diff = energyEnvelope[i] - energyEnvelope[i-1];
+                onsets[i] = diff > 0 ? diff : 0; 
             }
             
-            // 3. Autocorrelation to find periodic beat perfectly (immune to offbeats)
-            let autocorr = new Float32Array(150);
-            for (let lag = 25; lag < 150; lag++) { // 40 to 240 BPM range
+            // 3. 자기 상관(Autocorrelation) 알고리즘: 소리 패턴이 겹치는 주기 검출
+            const envSampleRate = targetSampleRate / hopSize; // 약 344.53 Hz
+            const minBpm = 60;
+            const maxBpm = 180;
+            
+            const minLag = Math.floor(envSampleRate * (60 / maxBpm));
+            const maxLag = Math.floor(envSampleRate * (60 / minBpm));
+            
+            let autocorr = new Float32Array(maxLag + 1);
+            
+            for (let lag = minLag; lag <= maxLag; lag++) {
                 let sum = 0;
                 let count = onsets.length - lag;
                 for (let i = 0; i < count; i++) {
                     sum += onsets[i] * onsets[i + lag];
                 }
-                // Normalize by count to prevent picking shorter lags (Double BPM) unfairly
-                autocorr[lag] = sum / count; 
+                autocorr[lag] = sum / count; // 뒤로 갈수록 겹치는 구간이 짧아지는 것 보정
             }
             
-            // 4. Find highest peak in autocorrelation
             let maxCorr = 0;
             let bestLag = 0;
             let sumCorr = 0;
             
-            for (let lag = 25; lag < 150; lag++) {
+            for (let lag = minLag; lag <= maxLag; lag++) {
                 sumCorr += autocorr[lag];
                 if (autocorr[lag] > maxCorr) {
                     maxCorr = autocorr[lag];
@@ -543,25 +572,26 @@ function detectBPMBackground(buffer) {
                 }
             }
             
-            // Confidence threshold to reject natural noise (water, wind)
-            let meanCorr = sumCorr / 125;
-            if (maxCorr < meanCorr * 1.35) {
-                // If peak is not at least 35% stronger than average noise, no clear beat is present.
-                self.postMessage({ bpm: 0 });
+            // 신뢰도 평가: 일반 백색소음이나 비정형 데이터에서는 피크가 약함
+            let meanCorr = sumCorr / (maxLag - minLag + 1);
+            if (maxCorr < meanCorr * 1.5) {
+                self.postMessage({ bpm: 0 }); // 비트가 없거나 너무 불분명함
                 return;
             }
             
+            // Lag를 BPM으로 변환
             let detectedBPM = 0;
             if (bestLag > 0) {
-                detectedBPM = 60 / (bestLag * (blockSize / sampleRate));
+                detectedBPM = 60 / (bestLag / envSampleRate);
                 
-                // Octave Correction: Keep most music centered in common 70-160 BPM DJ tracking ranges
-                if (detectedBPM < 60) detectedBPM *= 2;
+                // DJ 표준 템포 범위(70~160)에 맞게 옥타브 보정
+                if (detectedBPM < 70) detectedBPM *= 2;
                 if (detectedBPM > 180) detectedBPM /= 2;
                 
                 detectedBPM = Math.round(detectedBPM);
             }
             
+            // 4. 메인 스레드로 결과 반환 (UI 프리징 없음)
             self.postMessage({ bpm: detectedBPM });
         };
     `], { type: 'application/javascript' });
