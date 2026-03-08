@@ -814,6 +814,18 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// Utility: Format Date for filenames
+function getFormattedDateStamp() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    return `${yyyy}${mm}${dd}_${hh}${min}${ss}`;
+}
+
 // Recording Logic
 recordBtn.addEventListener('click', () => {
     if (isRecording) stopRecording();
@@ -851,7 +863,7 @@ async function startRecording() {
             const url = URL.createObjectURL(result.blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `winamp_mod_recorded_${Date.now()}.${result.ext}`;
+            a.download = `muzikboi_recorded_${getFormattedDateStamp()}.${result.ext}`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1132,7 +1144,7 @@ saveBtn.addEventListener('click', async () => {
         const url = URL.createObjectURL(result.blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'winamp_mod_full_' + Date.now() + '.' + result.ext;
+        a.download = 'muzikboi_full_' + getFormattedDateStamp() + '.' + result.ext;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
