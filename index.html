@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뮤직보이</title>
+    <link rel="icon" type="image/png" href="favicon_transparent.png">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+</head>
+<body>
+    <div class="winamp-container" id="draggable-window">
+        <!-- Main Winamp Window -->
+        <div class="winamp-main glass">
+            <div class="winamp-header" id="window-header">
+                <div class="winamp-logo">
+                    <img src="favicon_transparent.png" alt="logo">
+                    <span><span class="winamp-w">뮤</span>직보이</span>
+                </div>
+                <div class="winamp-title-bar"></div>
+                <div class="winamp-window-btns">
+                    <span>-</span><span>□</span><span class="close-x">×</span>
+                </div>
+            </div>
+
+            <div class="winamp-display">
+                <div class="lcd-screen">
+                    <div class="lcd-track-container">
+                        <div id="lcd-track-name">NO FILE LOADED</div>
+                    </div>
+                    <div class="lcd-bottom">
+                        <div class="display-left">
+                            <div class="bitrate">192 kbps</div>
+                            <div class="sample-rate">44 khz</div>
+                            <div class="bpm-meter">BPM: <span id="bpm-value">--</span></div>
+                            <div class="load-status" id="load-status">READY</div>
+                        </div>
+                        <div class="display-center">
+                            <div id="time-display" class="time-display">00:00 <span id="total-time">/ 00:00</span></div>
+                            <div class="viz-container">
+                                <div class="viz-bar"></div>
+                                <div class="viz-bar"></div>
+                                <div class="viz-bar"></div>
+                                <div class="viz-bar"></div>
+                                <div class="viz-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="seek-container">
+                    <input type="range" id="seek-bar" min="0" max="100" value="0" step="0.1" disabled>
+                </div>
+            </div>
+
+            <div class="winamp-controls">
+                <div class="playback-buttons">
+                    <button id="prev-btn" class="win-btn" title="Previous" disabled>
+                        <i class="icon-prev"></i>
+                    </button>
+                    <button id="play-btn" class="win-btn" title="Play" disabled>
+                        <i class="icon-play"></i>
+                    </button>
+                    <button id="pause-btn" class="win-btn" title="Pause" disabled>
+                        <i class="icon-pause"></i>
+                    </button>
+                    <button id="stop-btn" class="win-btn" title="Stop" disabled>
+                        <i class="icon-stop"></i>
+                    </button>
+                    <button id="next-btn" class="win-btn" title="Next" disabled>
+                        <i class="icon-next"></i>
+                    </button>
+                </div>
+                <input type="file" id="file-input" accept="audio/*,.mp3,.wav,.ogg,.flac" multiple hidden>
+            </div>
+
+            <div class="winamp-modifiers">
+                <div class="modifier-row">
+                    <label>PITCH</label>
+                    <div class="btn-group">
+                        <button id="pitch-down" class="step-btn" disabled>-</button>
+                        <span id="pitch-value">0st</span>
+                        <button id="pitch-up" class="step-btn" disabled>+</button>
+                    </div>
+                </div>
+                <div class="modifier-row">
+                    <label>TEMPO</label>
+                    <div class="btn-group">
+                        <button id="tempo-down" class="step-btn" disabled>-</button>
+                        <span id="tempo-value">1.00x</span>
+                        <button id="tempo-up" class="step-btn" disabled>+</button>
+                    </div>
+                </div>
+                <div class="modifier-row sync-row">
+                    <label>SYNC</label>
+                    <div class="sync-switch" id="sync-toggle" title="Sync Pitch & Tempo">
+                        <div class="sync-opt sync-off">OFF</div>
+                        <div class="sync-opt sync-on">ON</div>
+                    </div>
+                </div>
+                <div class="modifier-row tap-row">
+                    <label id="tap-label">TAP</label>
+                    <div class="btn-group">
+                        <span id="tap-bpm-display" style="width: 58px;">--</span>
+                        <button id="tap-btn" class="step-btn" style="width: 55px; font-size: 11px;">TAP</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="record-btn" class="winamp-action-btn" disabled>
+                    RECORD
+                </button>
+                <button id="save-btn" class="winamp-action-btn" disabled>
+                    SAVE FULL
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Playlist Window -->
+        <div class="winamp-playlist glass">
+            <div class="winamp-header" id="playlist-header">
+                <div class="winamp-title-bar">PLAYLIST</div>
+                <div class="winamp-window-btns">
+                    <span class="close-x">×</span>
+                </div>
+            </div>
+            <div class="playlist-content" id="playlist-content">
+                <!-- Playlist items go here -->
+            </div>
+            <div class="playlist-controls">
+                <button id="pl-add-btn" class="win-btn">ADD</button>
+                <button id="pl-rem-btn" class="win-btn">REM</button>
+            </div>
+        </div>
+
+        <div id="drop-zone" class="winamp-drop">
+            <p>DRAG & DROP AUDIO HERE</p>
+            <span style="font-size: 11px; color: #888; display: block; margin-top: 8px;">SUPPORTED: MP3, WAV, FLAC, OGG, AAC</span>
+        </div>
+        
+        <!-- Custom Alert Modal -->
+        <div id="custom-alert" class="glass" style="display: none;">
+            <div class="winamp-header">
+                <div class="winamp-title-bar">WARNING</div>
+            </div>
+            <div class="alert-content">
+                <p id="alert-message"></p>
+                <button id="alert-ok-btn" class="win-btn">OK</button>
+            </div>
+        </div>
+    </div>
+    </div>
+    
+    <!-- Processing Overlay -->
+    <div id="processing-overlay" class="processing-overlay">
+        <div class="processing-window glass">
+            <div class="winamp-header">
+                <div class="winamp-title-bar">MODIFIER EXPORT</div>
+                <div class="winamp-window-btns">
+                    <span class="close-x" id="cancel-process-btn">×</span>
+                </div>
+            </div>
+            <div class="processing-content">
+                <div class="processing-text">PROCESSING AUDIO...</div>
+                
+                <div class="progress-bar-container">
+                    <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                </div>
+                <div id="processing-pct" class="processing-text progress-pct">0%</div>
+                
+                <div style="margin-top: 15px; color: #aaa; font-size: 11px;">Rendering & Encoding...<br>Please do not close the window.</div>
+                
+                <button id="cancel-process-btn-ui" class="winamp-action-btn" style="margin-top: 15px; width: 80px; font-size: 11px; padding: 5px;">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
