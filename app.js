@@ -1259,3 +1259,36 @@ document.addEventListener('mousemove', (e) => {
 document.addEventListener('mouseup', () => {
     isDragging = false;
 });
+
+// ── Sample Songs Auto-Loading ────────────────────────────────────────────────
+async function loadSamples() {
+    const sampleFiles = [
+        { url: 'samples/sample01.mp3', name: 'Sample Song 01' },
+        { url: 'samples/sample02.mp3', name: 'Sample Song 02' },
+        { url: 'samples/sample03.mp3', name: 'Sample Song 03' },
+        { url: 'samples/sample04.mp3', name: 'Sample Song 04' },
+        { url: 'samples/sample05.mp3', name: 'Sample Song 05' }
+    ];
+
+    for (const s of sampleFiles) {
+        try {
+            const resp = await fetch(s.url);
+            if (!resp.ok) continue;
+            const blob = await resp.blob();
+            const file = new File([blob], s.name + '.mp3', { type: 'audio/mpeg' });
+            
+            playlist.push(file);
+            renderPlaylist();
+
+            // 첫 번째 곡이 로드되면 화면에 Ready 상태로 표시
+            if (playlist.length === 1) {
+                loadPlaylistItem(0);
+            }
+        } catch (e) {
+            console.error('Failed to load sample:', s.name, e);
+        }
+    }
+}
+
+// 초기화 시 실행
+window.addEventListener('load', loadSamples);
