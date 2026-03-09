@@ -8,13 +8,11 @@ const loadStatus = document.getElementById('load-status');
 function setTrackName(name) {
     lcdTrackName.textContent = name;
     
-    // Check for overflow to trigger marquee
+    // 무조건 스크롤되도록 marquee 클래스 항상 부여 (재생 중에만 애니메이션 트리거됨)
     lcdTrackName.classList.remove('marquee');
     lcdTrackName.classList.remove('playing');
     void lcdTrackName.offsetWidth; // force reflow
-    if (lcdTrackName.scrollWidth > lcdTrackContainer.clientWidth) {
-        lcdTrackName.classList.add('marquee');
-    }
+    lcdTrackName.classList.add('marquee');
 }
 const timeDisplay = document.getElementById('time-display');
 const totalTimeSpan = document.getElementById('total-time');

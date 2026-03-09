@@ -61,7 +61,11 @@ body {
     width: 22px;
 }
 
-.winamp-w { color: #ffff00; font-family: 'Noto Serif KR', serif; }
+.winamp-logo span {
+    font-family: 'Noto Serif KR', serif;
+}
+
+.winamp-w { color: #ffff00; }
 
 
 
@@ -126,7 +130,7 @@ body {
 
 #lcd-track-name.marquee.playing {
     padding-left: 100%;
-    animation: marquee-scroll 12s linear infinite;
+    animation: marquee-scroll 24s steps(120, end) infinite;
     animation-play-state: running;
 }
 
@@ -234,6 +238,9 @@ input[type="range"]#seek-bar::-webkit-slider-thumb {
     justify-content: center;
     align-items: center;
     outline: none;
+    -webkit-appearance: none;
+    color: #000; /* Force black text */
+    text-decoration: none;
 }
 
 .win-btn:active:not(:disabled) {
@@ -335,6 +342,7 @@ input[type="range"]#seek-bar::-webkit-slider-thumb {
     cursor: pointer;
     font-weight: bold;
     outline: none;
+    -webkit-appearance: none;
 }
 
 .step-btn:active:not(:disabled) {
