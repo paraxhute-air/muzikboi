@@ -18,15 +18,15 @@ body {
     background-color: #008080; /* Windows 95/98 Default Teal */
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* prevent centering bugs */
+    padding-top: 40px; /* fixed top padding */
     min-height: 100vh;
-    min-height: 100dvh;
 }
 
 .winamp-container {
     width: 480px; /* Scaled up from 380px */
     padding: 15px;
-    position: absolute; /* Needed for dragging */
+    position: relative; /* Switched to relative; JS handles making it absolute on drag */
 }
 
 .winamp-main {
@@ -638,10 +638,4 @@ input[type="range"]#seek-bar::-webkit-slider-thumb {
     margin: 0 auto;
 }
 
-/* 모바일 뷰포트 시각적 보정: 주소창 등으로 인해 아래로 쏠려 보이는 현상 방지 */
-@media (max-width: 600px) {
-    .winamp-container {
-        transform: translateY(-30px);
-    }
-}
-
+/* 모바일 뷰포트 시각적 보정 (현재는 필요하지 않아 제거됨) */
