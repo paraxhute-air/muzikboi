@@ -841,14 +841,65 @@ function updateStatusUI(isPlaying) {
     renderPlaylist();
 }
 
-// Spacebar Toggle
+// Keyboard Shortcuts
 document.addEventListener('keydown', (e) => {
+    const tagName = document.activeElement.tagName.toLowerCase();
+    if (tagName === 'input' || tagName === 'textarea') return;
+    
     if (e.code === 'Space') {
-        const tagName = document.activeElement.tagName.toLowerCase();
-        if (tagName === 'input' || tagName === 'textarea') return;
-        
         e.preventDefault();
-        playBtn.click();
+        // 플레이어가 이미 실행 중이면 일시정지, 아니면 재생
+        if (player && player.state === 'started') {
+            pauseBtn.click();
+        } else {
+            playBtn.click();
+        }
+    } else if (e.code === 'ArrowUp') {
+        e.preventDefault();
+        if (playlist.length > 0) {
+            if (selectedPlaylistIndex > 0) {
+                selectedPlaylistIndex--;
+            } else {
+                selectedPlaylistIndex = playlist.length - 1;
+            }
+            renderPlaylist();
+            const items = document.querySelectorAll('.pl-item');
+            if (items[selectedPlaylistIndex]) {
+                items[selectedPlaylistIndex].scrollIntoView({ behavior: 'auto', block: 'nearest' });
+            }
+        }
+    } else if (e.code === 'ArrowDown') {
+        e.preventDefault();
+        if (playlist.length > 0) {
+            if (selectedPlaylistIndex < playlist.length - 1) {
+                selectedPlaylistIndex++;
+            } else {
+                selectedPlaylistIndex = 0;
+            }
+            renderPlaylist();
+            const items = document.querySelectorAll('.pl-item');
+            if (items[selectedPlaylistIndex]) {
+                items[selectedPlaylistIndex].scrollIntoView({ behavior: 'auto', block: 'nearest' });
+            }
+        }
+    } else if (e.code === 'Enter') {
+        e.preventDefault();
+        if (selectedPlaylistIndex >= 0 && selectedPlaylistIndex < playlist.length) {
+             if (currentPlaylistIndex !== selectedPlaylistIndex) {
+                 loadPlaylistItem(selectedPlaylistIndex).then(() => {
+                     setTimeout(() => { if(!playBtn.disabled) playBtn.click() }, 50);
+                 });
+             } else {
+                 if (player) {
+                     if (player.state === 'started') {
+                         stopBtn.click();
+                     }
+                     setTimeout(() => { if(!playBtn.disabled) playBtn.click() }, 50);
+                 } else {
+                     setTimeout(() => { if(!playBtn.disabled) playBtn.click() }, 50);
+                 }
+             }
+        }
     }
 });
 
@@ -1263,11 +1314,11 @@ document.addEventListener('mouseup', () => {
 // ── Sample Songs Auto-Loading ────────────────────────────────────────────────
 async function loadSamples() {
     const sampleFiles = [
-        { url: 'samples/sample01.mp3', name: 'Sample Song 01' },
-        { url: 'samples/sample02.mp3', name: 'Sample Song 02' },
-        { url: 'samples/sample03.mp3', name: 'Sample Song 03' },
-        { url: 'samples/sample04.mp3', name: 'Sample Song 04' },
-        { url: 'samples/sample05.mp3', name: 'Sample Song 05' }
+        { url: 'samples/sample01.mp3', name: 'SampleSong_01' },
+        { url: 'samples/sample02.mp3', name: 'SampleSong_02' },
+        { url: 'samples/sample03.mp3', name: 'SampleSong_03' },
+        { url: 'samples/sample04.mp3', name: 'SampleSong_04' },
+        { url: 'samples/sample05.mp3', name: 'SampleSong_05' }
     ];
 
     for (const s of sampleFiles) {
