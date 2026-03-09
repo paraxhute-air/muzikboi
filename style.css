@@ -18,9 +18,16 @@ body {
     background-color: #008080; /* Windows 95/98 Default Teal */
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* prevent centering bugs */
-    padding-top: 40px; /* fixed top padding */
+    align-items: center; /* PC: default center alignment */
     min-height: 100vh;
+}
+
+/* 모바일 뷰포트 (가로 600px 이하) 에서만 상단 여백 20px 적용 */
+@media (max-width: 600px) {
+    body {
+        align-items: flex-start;
+        padding-top: 20px;
+    }
 }
 
 .winamp-container {
