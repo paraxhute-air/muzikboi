@@ -91,9 +91,19 @@ let currentPlaylistIndex = -1;
 let selectedPlaylistIndex = -1;
 
 // Initialize Audio Context
+let isUnmuteInitialized = false;
 async function initAudio() {
     if (Tone.context.state !== 'running') {
         await Tone.start();
+    }
+
+    // 모바일(iOS 등) 환경에서 무음 모드일 때 스피커로 소리가 나지 않는 문제 해결
+    if (navigator.audioSession) {
+        navigator.audioSession.type = 'playback';
+    }
+    if (window.unmute && Tone.context.rawContext && !isUnmuteInitialized) {
+        unmute(Tone.context.rawContext, true, false);
+        isUnmuteInitialized = true;
     }
 }
 
