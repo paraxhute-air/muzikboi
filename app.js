@@ -87,6 +87,7 @@ let bpmWorker = null;
 let playlist = [];
 let currentPlaylistIndex = -1;
 let selectedPlaylistIndex = -1;
+let currentLoadId = 0;
 
 // Initialize Audio Context
 let isUnmuteInitialized = false;
@@ -261,6 +262,8 @@ async function loadPlaylistItem(index) {
     currentPlaylistIndex = index;
     renderPlaylist();
     const file = playlist[index];
+    
+    const loadId = ++currentLoadId;
 
     currentFileSize = file.size;
     setTrackName('LOADING...');
@@ -278,7 +281,9 @@ async function loadPlaylistItem(index) {
         applyPitchAndTempo();
         
         const arrayBuffer = await file.arrayBuffer();
+        if (loadId !== currentLoadId) return;
         const nativeBuffer = await Tone.context.decodeAudioData(arrayBuffer);
+        if (loadId !== currentLoadId) return;
         audioBuffer = new Tone.ToneAudioBuffer(nativeBuffer);
         
         setupPlayer();
@@ -843,8 +848,11 @@ function updateStatusUI(isPlaying) {
 
 // Keyboard Shortcuts
 document.addEventListener('keydown', (e) => {
-    const tagName = document.activeElement.tagName.toLowerCase();
-    if (tagName === 'input' || tagName === 'textarea') return;
+    const activeEl = document.activeElement;
+    const tagName = activeEl.tagName.toLowerCase();
+    
+    // 텍스트를 입력하는 input이거나 textarea일 때만 단축키 무시 (range 타입 즉 점핑바는 단축키 허용)
+    if (tagName === 'textarea' || (tagName === 'input' && activeEl.type !== 'range')) return;
     
     if (e.code === 'Space') {
         e.preventDefault();

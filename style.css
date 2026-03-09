@@ -128,9 +128,13 @@ body {
     white-space: nowrap;
 }
 
-#lcd-track-name.marquee.playing {
+#lcd-track-name.marquee {
     padding-left: 100%;
     animation: marquee-scroll 24s steps(120, end) infinite;
+    animation-play-state: paused;
+}
+
+#lcd-track-name.marquee.playing {
     animation-play-state: running;
 }
 
