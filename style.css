@@ -20,6 +20,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 .winamp-container {
@@ -636,3 +637,11 @@ input[type="range"]#seek-bar::-webkit-slider-thumb {
     font-size: 14px;
     margin: 0 auto;
 }
+
+/* 모바일 뷰포트 시각적 보정: 주소창 등으로 인해 아래로 쏠려 보이는 현상 방지 */
+@media (max-width: 600px) {
+    .winamp-container {
+        transform: translateY(-30px);
+    }
+}
+
