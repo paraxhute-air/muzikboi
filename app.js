@@ -308,10 +308,10 @@ async function loadPlaylistItem(index) {
 
     currentFileSize = file.size;
     setTrackName('LOADING...');
+    lcdTrackName.classList.add('loading-text');
     loadStatus.textContent = 'READY';
     loadStatus.classList.add('loaded'); // Make READY green/visible
     loadStatus.classList.remove('playing-status');
-    disableControls();
 
     try {
         await initAudio();
@@ -336,6 +336,7 @@ async function loadPlaylistItem(index) {
         tapBpmDisplay.textContent = '--';
         
         setTrackName(file.name.toUpperCase());
+        lcdTrackName.classList.remove('loading-text');
         loadStatus.textContent = 'READY';
         loadStatus.classList.add('loaded');
         enableControls();
@@ -348,6 +349,7 @@ async function loadPlaylistItem(index) {
         if (loadId === currentLoadId) isLoadingAudio = false;
         console.error('Error loading audio:', error);
         setTrackName('ERROR: UNSUPPORTED FORMAT');
+        lcdTrackName.classList.remove('loading-text');
         loadStatus.textContent = 'ERROR';
         showCustomAlert(file.name + ' 파일을 브라우저 화면에서 읽을 수 없습니다.<br><br>손상된 파일이거나 지원되지 않는 코덱입니다.<br><span style="color: white;">지원 포맷: MP3, WAV, FLAC, OGG, AAC</span><br>플레이리스트에서 자동 제외됩니다.');
         

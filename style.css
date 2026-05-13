@@ -146,6 +146,10 @@ body {
     animation-play-state: running;
 }
 
+#lcd-track-name.loading-text {
+    color: #666;
+}
+
 @keyframes marquee-scroll {
     0% { transform: translate(0, 0); }
     100% { transform: translate(-100%, 0); }
