@@ -256,7 +256,8 @@ function renderPlaylist() {
                      if(!playBtn.disabled) playBtn.click();
                  });
              } else {
-                 // 현재 로드된 곡: Suspended 상태에서 생성된 불량 노드를 재생성 후 즉시 재생
+                 // 현재 로드된 곡: 백그라운드 loadPlaylistItem 취소 후 재생성
+                 currentLoadId++; // 페이지 로드 시 실행 중인 loadPlaylistItem(0) 취소
                  if (player && player.state === 'started') {
                      player.stop();
                      cancelAnimationFrame(animationId);
@@ -940,6 +941,7 @@ document.addEventListener('keydown', (e) => {
              } else {
                  // 현재 곡: ondblclick과 동일하게 setupPlayer 재생성 후 재생
                  (async () => {
+                     currentLoadId++; // 페이지 로드 시 실행 중인 loadPlaylistItem(0) 취소
                      await initAudio();
                      if (player && player.state === 'started') {
                          player.stop();
