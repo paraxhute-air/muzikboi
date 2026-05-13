@@ -1441,7 +1441,7 @@ async function loadSamples() {
 const infoBtn = document.getElementById('info-btn');
 if (infoBtn) {
     infoBtn.addEventListener('click', () => {
-        showCustomAlert('developed by 1407 Lab.<br>last updated on 2026.05.13');
+        showCustomAlert('<span>developed by 1407 Lab.</span><span style="display:block; margin-top: 10px;">last updated on 2026.05.13</span>');
     });
 }
 
