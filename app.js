@@ -88,6 +88,7 @@ let playlist = [];
 let currentPlaylistIndex = -1;
 let selectedPlaylistIndex = -1;
 let currentLoadId = 0;
+let isLoadingAudio = false;
 
 // Initialize Audio Context
 let isUnmuteInitialized = false;
@@ -250,14 +251,16 @@ function renderPlaylist() {
              selectedPlaylistIndex = index;
              await initAudio();
              
-             if (currentPlaylistIndex !== index) {
-                 // 다른 곡: loadPlaylistItem이 setupPlayer()를 내부에서 호출함
-                 loadPlaylistItem(index).then(() => {
-                     if(!playBtn.disabled) playBtn.click();
+             if (currentPlaylistIndex !== index || isLoadingAudio) {
+                 // 다른 곡이거나 현재 곡이 아직 로딩 중인 경우 안전하게 로드 후 재생
+                 loadPlaylistItem(index).then(async () => {
+                     if(!playBtn.disabled) {
+                         if (player) await player.loaded;
+                         playBtn.click();
+                     }
                  });
              } else {
                  // 현재 로드된 곡: 백그라운드 loadPlaylistItem 취소 후 재생성
-                 currentLoadId++; // 페이지 로드 시 실행 중인 loadPlaylistItem(0) 취소
                  if (player && player.state === 'started') {
                      player.stop();
                      cancelAnimationFrame(animationId);
@@ -301,6 +304,7 @@ async function loadPlaylistItem(index) {
     const file = playlist[index];
     
     const loadId = ++currentLoadId;
+    isLoadingAudio = true;
 
     currentFileSize = file.size;
     setTrackName('LOADING...');
@@ -337,8 +341,11 @@ async function loadPlaylistItem(index) {
         enableControls();
         resetPlaybackUI();
         
+        if (loadId === currentLoadId) isLoadingAudio = false;
+        
         // Auto-play the next song if it was triggered automatically (maybe later)
     } catch (error) {
+        if (loadId === currentLoadId) isLoadingAudio = false;
         console.error('Error loading audio:', error);
         setTrackName('ERROR: UNSUPPORTED FORMAT');
         loadStatus.textContent = 'ERROR';
@@ -930,18 +937,17 @@ document.addEventListener('keydown', (e) => {
     } else if (e.code === 'Enter') {
         e.preventDefault();
         if (selectedPlaylistIndex >= 0 && selectedPlaylistIndex < playlist.length) {
-             if (currentPlaylistIndex !== selectedPlaylistIndex) {
-                 // 다른 곡: 로드 후 재생 (loadPlaylistItem 내부에서 setupPlayer 호출됨)
+             if (currentPlaylistIndex !== selectedPlaylistIndex || isLoadingAudio) {
+                 // 다른 곡이거나 로딩 중: 안전하게 로드 후 재생
                  loadPlaylistItem(selectedPlaylistIndex).then(async () => {
                      if (!playBtn.disabled) {
-                         await player.loaded;
+                         if (player) await player.loaded;
                          playBtn.click();
                      }
                  });
              } else {
                  // 현재 곡: ondblclick과 동일하게 setupPlayer 재생성 후 재생
                  (async () => {
-                     currentLoadId++; // 페이지 로드 시 실행 중인 loadPlaylistItem(0) 취소
                      await initAudio();
                      if (player && player.state === 'started') {
                          player.stop();
