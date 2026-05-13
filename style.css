@@ -146,7 +146,8 @@ body {
     animation-play-state: running;
 }
 
-#lcd-track-name.loading-text {
+#lcd-track-name.loading-text,
+.pl-item.loading-text {
     color: #666;
 }
 

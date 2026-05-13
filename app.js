@@ -238,6 +238,7 @@ function renderPlaylist() {
         const isPlaying = player && player.state === 'started';
         if (index === currentPlaylistIndex && isPlaying) div.classList.add('playing');
         if (index === selectedPlaylistIndex) div.classList.add('selected');
+        if (f.isPlaceholder) div.classList.add('loading-text');
         
         div.textContent = `${index + 1}. ${f.name}`;
         div.title = f.name;
@@ -248,6 +249,7 @@ function renderPlaylist() {
         };
 
         div.ondblclick = async () => {
+             if (f.isPlaceholder) return;
              selectedPlaylistIndex = index;
              await initAudio();
              
@@ -939,6 +941,9 @@ document.addEventListener('keydown', (e) => {
     } else if (e.code === 'Enter') {
         e.preventDefault();
         if (selectedPlaylistIndex >= 0 && selectedPlaylistIndex < playlist.length) {
+             const selectedFile = playlist[selectedPlaylistIndex];
+             if (selectedFile.isPlaceholder) return;
+
              if (currentPlaylistIndex !== selectedPlaylistIndex || isLoadingAudio) {
                  // 다른 곡이거나 로딩 중: 안전하게 로드 후 재생
                  loadPlaylistItem(selectedPlaylistIndex).then(async () => {
@@ -1396,18 +1401,26 @@ async function loadSamples() {
     ];
 
     for (const s of sampleFiles) {
+        playlist.push({ isPlaceholder: true, name: s.name + '.mp3' });
+    }
+    renderPlaylist();
+
+    for (let i = 0; i < sampleFiles.length; i++) {
+        const s = sampleFiles[i];
         try {
             const resp = await fetch(s.url);
             if (!resp.ok) continue;
             const blob = await resp.blob();
             const file = new File([blob], s.name + '.mp3', { type: 'audio/mpeg' });
             
-            playlist.push(file);
-            renderPlaylist();
+            const targetIndex = playlist.findIndex(f => f.isPlaceholder && f.name === s.name + '.mp3');
+            if (targetIndex !== -1) {
+                playlist[targetIndex] = file;
+                renderPlaylist();
 
-            // 첫 번째 곡이 로드되면 화면에 Ready 상태로 표시
-            if (playlist.length === 1) {
-                loadPlaylistItem(0);
+                if (i === 0) {
+                    loadPlaylistItem(targetIndex);
+                }
             }
         } catch (e) {
             console.error('Failed to load sample:', s.name, e);
