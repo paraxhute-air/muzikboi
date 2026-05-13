@@ -271,6 +271,7 @@ function renderPlaylist() {
                  }
                  
                  try {
+                     await player.loaded; // GrainPlayer 비동기 초기화 완료 대기
                      player.start(0, 0);
                      startTime = Tone.context.currentTime;
                      updateStatusUI(true);
@@ -929,18 +930,38 @@ document.addEventListener('keydown', (e) => {
         e.preventDefault();
         if (selectedPlaylistIndex >= 0 && selectedPlaylistIndex < playlist.length) {
              if (currentPlaylistIndex !== selectedPlaylistIndex) {
-                 loadPlaylistItem(selectedPlaylistIndex).then(() => {
-                     setTimeout(() => { if(!playBtn.disabled) playBtn.click() }, 50);
+                 // 다른 곡: 로드 후 재생 (loadPlaylistItem 내부에서 setupPlayer 호출됨)
+                 loadPlaylistItem(selectedPlaylistIndex).then(async () => {
+                     if (!playBtn.disabled) {
+                         await player.loaded;
+                         playBtn.click();
+                     }
                  });
              } else {
-                 if (player) {
-                     if (player.state === 'started') {
-                         stopBtn.click();
+                 // 현재 곡: ondblclick과 동일하게 setupPlayer 재생성 후 재생
+                 (async () => {
+                     await initAudio();
+                     if (player && player.state === 'started') {
+                         player.stop();
+                         cancelAnimationFrame(animationId);
+                         updateStatusUI(false);
                      }
-                     setTimeout(() => { if(!playBtn.disabled) playBtn.click() }, 50);
-                 } else {
-                     setTimeout(() => { if(!playBtn.disabled) playBtn.click() }, 50);
-                 }
+                     setupPlayer();
+                     playbackOffset = 0;
+                     if (!bpmCalculated && audioBuffer) {
+                         detectBPMBackground(audioBuffer);
+                         bpmCalculated = true;
+                     }
+                     try {
+                         await player.loaded;
+                         player.start(0, 0);
+                         startTime = Tone.context.currentTime;
+                         updateStatusUI(true);
+                         startUpdateLoop();
+                     } catch(e) {
+                         console.error('Playback Error (Enter):', e);
+                     }
+                 })();
              }
         }
     }
