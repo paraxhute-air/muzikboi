@@ -246,18 +246,20 @@ function renderPlaylist() {
              renderPlaylist();
         };
 
-        div.ondblclick = () => {
+        div.ondblclick = async () => {
              selectedPlaylistIndex = index;
+             await initAudio();
+             
              if (currentPlaylistIndex !== index) {
                  loadPlaylistItem(index).then(() => {
-                     setTimeout(() => { if(!playBtn.disabled) playBtn.click() }, 50);
+                     if(!playBtn.disabled) playBtn.click();
                  });
              } else {
                  if (player) {
                      if (player.state === 'started') {
                          stopBtn.click();
                      }
-                     setTimeout(() => { if(!playBtn.disabled) playBtn.click() }, 50);
+                     if(!playBtn.disabled) playBtn.click();
                  }
              }
         };
