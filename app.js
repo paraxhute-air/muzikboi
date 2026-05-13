@@ -251,15 +251,33 @@ function renderPlaylist() {
              await initAudio();
              
              if (currentPlaylistIndex !== index) {
+                 // 다른 곡: loadPlaylistItem이 setupPlayer()를 내부에서 호출함
                  loadPlaylistItem(index).then(() => {
                      if(!playBtn.disabled) playBtn.click();
                  });
              } else {
-                 if (player) {
-                     if (player.state === 'started') {
-                         stopBtn.click();
-                     }
-                     if(!playBtn.disabled) playBtn.click();
+                 // 현재 로드된 곡: Suspended 상태에서 생성된 불량 노드를 재생성 후 즉시 재생
+                 if (player && player.state === 'started') {
+                     player.stop();
+                     cancelAnimationFrame(animationId);
+                     updateStatusUI(false);
+                 }
+                 setupPlayer(); // 새 AudioContext에서 노드 재생성
+                 playbackOffset = 0;
+                 
+                 if (!bpmCalculated && audioBuffer) {
+                     detectBPMBackground(audioBuffer);
+                     bpmCalculated = true;
+                 }
+                 
+                 try {
+                     player.start(0, 0);
+                     startTime = Tone.context.currentTime;
+                     updateStatusUI(true);
+                     startUpdateLoop();
+                 } catch(e) {
+                     console.error('Playback Error:', e);
+                     setTrackName('FORMAT ERROR');
                  }
              }
         };
@@ -659,13 +677,7 @@ function detectBPMBackground(buffer) {
 }
 
 playBtn.addEventListener('click', async () => {
-    let wasSuspended = Tone.context.state !== 'running';
     await initAudio();
-    
-    if (wasSuspended && player) {
-        setupPlayer();
-    }
-    
     if (!player) return;
 
     if (player.state !== 'started') {
