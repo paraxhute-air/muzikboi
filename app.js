@@ -659,7 +659,13 @@ function detectBPMBackground(buffer) {
 }
 
 playBtn.addEventListener('click', async () => {
+    let wasSuspended = Tone.context.state !== 'running';
     await initAudio();
+    
+    if (wasSuspended && player) {
+        setupPlayer();
+    }
+    
     if (!player) return;
 
     if (player.state !== 'started') {
