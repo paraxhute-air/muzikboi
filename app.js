@@ -127,10 +127,16 @@ nextBtn.addEventListener('click', () => {
 });
 
 plRemBtn.addEventListener('click', () => {
-    if (currentPlaylistIndex !== -1 && playlist.length > 0) {
-        playlist.splice(currentPlaylistIndex, 1);
+    let targetIndex = selectedPlaylistIndex !== -1 ? selectedPlaylistIndex : currentPlaylistIndex;
+    
+    if (targetIndex !== -1 && playlist.length > 0) {
+        const isRemovingCurrent = (targetIndex === currentPlaylistIndex);
+        
+        playlist.splice(targetIndex, 1);
+        
         if (playlist.length === 0) {
             currentPlaylistIndex = -1;
+            selectedPlaylistIndex = -1;
             renderPlaylist();
             setTrackName('NO FILE LOADED');
             loadStatus.textContent = 'READY';
@@ -144,8 +150,17 @@ plRemBtn.addEventListener('click', () => {
             resetPlaybackUI();
             audioBuffer = null;
         } else {
-            currentPlaylistIndex = Math.min(currentPlaylistIndex, playlist.length - 1);
-            loadPlaylistItem(currentPlaylistIndex);
+            if (isRemovingCurrent) {
+                currentPlaylistIndex = Math.min(currentPlaylistIndex, playlist.length - 1);
+                selectedPlaylistIndex = -1;
+                loadPlaylistItem(currentPlaylistIndex);
+            } else {
+                if (targetIndex < currentPlaylistIndex) {
+                    currentPlaylistIndex--;
+                }
+                selectedPlaylistIndex = -1;
+                renderPlaylist();
+            }
         }
     }
 });
