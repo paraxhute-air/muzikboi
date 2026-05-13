@@ -30,7 +30,7 @@
             <div class="winamp-display">
                 <div class="lcd-screen">
                     <div class="lcd-track-container">
-                        <div id="lcd-track-name" class="marquee playing">Welcome to Muzikboi... Last Updated on 2026.05.13</div>
+                        <div id="lcd-track-name" class="marquee playing">Welcome to Muzikboi :D</div>
                     </div>
                     <div class="lcd-bottom">
                         <div class="display-left">
@@ -136,7 +136,7 @@
             <div class="playlist-controls">
                 <button id="pl-add-btn" class="win-btn">ADD</button>
                 <button id="pl-rem-btn" class="win-btn">REM</button>
-                <button id="info-btn" class="win-btn" style="margin-left: auto; font-family: 'Courier New', Courier, monospace; font-weight: bold;" title="About">i</button>
+                <button id="info-btn" class="win-btn" style="margin-left: auto; font-family: 'Courier New', Courier, monospace;" title="About">i</button>
             </div>
         </div>
 
@@ -148,11 +148,13 @@
         <!-- Custom Alert Modal -->
         <div id="custom-alert" class="glass" style="display: none;">
             <div class="winamp-header">
-                <div class="winamp-title-bar">WARNING</div>
+                <div class="winamp-title-bar" style="text-align: left; padding-left: 5px;">INFORMATION</div>
+                <div class="winamp-window-btns">
+                    <span id="alert-close-btn" class="close-x">×</span>
+                </div>
             </div>
             <div class="alert-content">
                 <p id="alert-message"></p>
-                <button id="alert-ok-btn" class="win-btn">OK</button>
             </div>
         </div>
     </div>
@@ -180,10 +182,6 @@
                 <button id="cancel-process-btn-ui" class="winamp-action-btn" style="margin-top: 15px; width: 80px; font-size: 11px; padding: 5px;">CANCEL</button>
             </div>
         </div>
-    </div>
-
-    <div style="position: absolute; bottom: 20px; right: 20px; font-style: italic; font-weight: bold; color: rgba(255, 255, 255, 0.4); font-size: 13px; text-align: right; pointer-events: none; z-index: 10;">
-        developed by 1407 Lab. / last updated on 2026.05.13
     </div>
 
     <script src="app.js"></script>

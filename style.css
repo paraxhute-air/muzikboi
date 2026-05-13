@@ -631,23 +631,17 @@ input[type="range"]#seek-bar::-webkit-slider-thumb {
 .alert-content {
     padding: 15px;
     text-align: center;
-    color: #ff3333;
+    color: var(--lcd-text);
     background-color: #000;
     margin: 4px;
     border: 2px solid var(--winamp-border-dark);
 }
 
 .alert-content p {
-    margin: 0 0 15px 0;
+    margin: 0;
     font-size: 13px;
-    line-height: 1.4;
+    line-height: 1.0;
     word-break: keep-all;
-}
-
-#alert-ok-btn {
-    padding: 4px 20px;
-    font-size: 14px;
-    margin: 0 auto;
 }
 
 /* 모바일 뷰포트 시각적 보정 (현재는 필요하지 않아 제거됨) */

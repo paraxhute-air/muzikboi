@@ -49,16 +49,18 @@ const plRemBtn = document.getElementById('pl-rem-btn');
 
 const customAlert = document.getElementById('custom-alert');
 const alertMessage = document.getElementById('alert-message');
-const alertOkBtn = document.getElementById('alert-ok-btn');
+const alertCloseBtn = document.getElementById('alert-close-btn');
 
 function showCustomAlert(msg) {
     alertMessage.innerHTML = msg.replace(/\n/g, '<br>');
     customAlert.style.display = 'block';
 }
 
-alertOkBtn.addEventListener('click', () => {
-    customAlert.style.display = 'none';
-});
+if (alertCloseBtn) {
+    alertCloseBtn.addEventListener('click', () => {
+        customAlert.style.display = 'none';
+    });
+}
 
 // State
 let player = null;
@@ -139,7 +141,7 @@ plRemBtn.addEventListener('click', () => {
             currentPlaylistIndex = -1;
             selectedPlaylistIndex = -1;
             renderPlaylist();
-            setTrackName('Welcome to Muzikboi... Last Updated on 2026.05.13');
+            setTrackName('Welcome to Muzikboi :D');
             loadStatus.textContent = 'READY';
             loadStatus.classList.remove('loaded');
             if (player) {
@@ -1432,7 +1434,7 @@ async function loadSamples() {
 const infoBtn = document.getElementById('info-btn');
 if (infoBtn) {
     infoBtn.addEventListener('click', () => {
-        showCustomAlert('developed by 1407 Lab.<br><br>last updated on 2026.05.13');
+        showCustomAlert('developed by 1407 Lab.<br>last updated on 2026.05.13');
     });
 }
 
