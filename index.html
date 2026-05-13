@@ -23,14 +23,14 @@
                 </div>
                 <div class="winamp-title-bar"></div>
                 <div class="winamp-window-btns">
-                    <span>-</span><span>□</span><span class="close-x">×</span>
+                    <span id="info-btn" title="About" style="background: var(--btn-bg); border: 2px solid var(--winamp-border-dark); box-shadow: inset 1px 1px 0 var(--winamp-border-light); padding: 0 6px; margin-left: 2px; cursor: pointer; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: black;">i</span><span>-</span><span>□</span><span class="close-x">×</span>
                 </div>
             </div>
 
             <div class="winamp-display">
                 <div class="lcd-screen">
                     <div class="lcd-track-container">
-                        <div id="lcd-track-name">NO FILE LOADED</div>
+                        <div id="lcd-track-name" class="marquee playing">Welcome to Muzikboi... Last Updated on 2026.05.13</div>
                     </div>
                     <div class="lcd-bottom">
                         <div class="display-left">
@@ -179,6 +179,11 @@
                 <button id="cancel-process-btn-ui" class="winamp-action-btn" style="margin-top: 15px; width: 80px; font-size: 11px; padding: 5px;">CANCEL</button>
             </div>
         </div>
+    </div>
+
+    <div style="position: absolute; bottom: 20px; right: 20px; font-style: italic; color: rgba(255, 255, 255, 0.4); font-size: 13px; text-align: right; pointer-events: none; z-index: 10;">
+        developed by 1407 Lab.<br>
+        last updated on 2026.05.13
     </div>
 
     <script src="app.js"></script>

@@ -139,7 +139,7 @@ plRemBtn.addEventListener('click', () => {
             currentPlaylistIndex = -1;
             selectedPlaylistIndex = -1;
             renderPlaylist();
-            setTrackName('NO FILE LOADED');
+            setTrackName('Welcome to Muzikboi... Last Updated on 2026.05.13');
             loadStatus.textContent = 'READY';
             loadStatus.classList.remove('loaded');
             if (player) {
@@ -1426,6 +1426,12 @@ async function loadSamples() {
             console.error('Failed to load sample:', s.name, e);
         }
     }
+// Info Button Event
+const infoBtn = document.getElementById('info-btn');
+if (infoBtn) {
+    infoBtn.addEventListener('click', () => {
+        showCustomAlert('developed by 1407 Lab.<br><br>last updated on 2026.05.13');
+    });
 }
 
 // 초기화 시 실행
