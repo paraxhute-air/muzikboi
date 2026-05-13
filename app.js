@@ -13,6 +13,11 @@ function setTrackName(name) {
     lcdTrackName.classList.remove('playing');
     void lcdTrackName.offsetWidth; // force reflow
     lcdTrackName.classList.add('marquee');
+    
+    // Welcome 문구는 항상 흐르도록 처리
+    if (name.includes('Welcome')) {
+        lcdTrackName.classList.add('playing');
+    }
 }
 const timeDisplay = document.getElementById('time-display');
 const totalTimeSpan = document.getElementById('total-time');
@@ -345,8 +350,10 @@ async function loadPlaylistItem(index) {
         updateBPMDisplay();
         tapBpmDisplay.textContent = '--';
         
-        setTrackName(file.name.toUpperCase());
-        lcdTrackName.classList.remove('loading-text');
+        if (hasEverPlayed) {
+            setTrackName(file.name.toUpperCase());
+            lcdTrackName.classList.remove('loading-text');
+        }
         loadStatus.textContent = 'READY';
         loadStatus.classList.add('loaded');
         enableControls();
@@ -881,6 +888,13 @@ function updateStatusUI(isPlaying) {
     if (pauseBtn) pauseBtn.classList.toggle('active', !isPlaying && playbackOffset > 0);
     
     if (isPlaying) {
+        // 최초 재생 시 Welcome 문구를 곡 제목으로 전환
+        if (lcdTrackName.textContent.includes('Welcome')) {
+            const file = playlist[currentPlaylistIndex];
+            if (file && !file.isPlaceholder) {
+                setTrackName(file.name.toUpperCase());
+            }
+        }
         hasEverPlayed = true;
         lcdTrackName.classList.add('playing');
         loadStatus.textContent = 'PLAYING';
