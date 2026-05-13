@@ -91,6 +91,7 @@ let currentPlaylistIndex = -1;
 let selectedPlaylistIndex = -1;
 let currentLoadId = 0;
 let isLoadingAudio = false;
+let hasEverPlayed = false; // Welcome 문구 표시 여부 추적
 
 // Initialize Audio Context
 let isUnmuteInitialized = false;
@@ -311,8 +312,13 @@ async function loadPlaylistItem(index) {
     isLoadingAudio = true;
 
     currentFileSize = file.size;
-    setTrackName('LOADING...');
-    lcdTrackName.classList.add('loading-text');
+    if (!hasEverPlayed) {
+        // 아직 한 번도 재생 전: LCD는 Welcome 문구 유지
+        lcdTrackName.classList.remove('loading-text');
+    } else {
+        setTrackName('LOADING...');
+        lcdTrackName.classList.add('loading-text');
+    }
     loadStatus.textContent = 'READY';
     loadStatus.classList.add('loaded'); // Make READY green/visible
     loadStatus.classList.remove('playing-status');
@@ -875,6 +881,7 @@ function updateStatusUI(isPlaying) {
     if (pauseBtn) pauseBtn.classList.toggle('active', !isPlaying && playbackOffset > 0);
     
     if (isPlaying) {
+        hasEverPlayed = true;
         lcdTrackName.classList.add('playing');
         loadStatus.textContent = 'PLAYING';
         loadStatus.classList.add('loaded', 'playing-status');
