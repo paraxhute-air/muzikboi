@@ -1426,6 +1426,8 @@ async function loadSamples() {
             console.error('Failed to load sample:', s.name, e);
         }
     }
+}
+
 // Info Button Event
 const infoBtn = document.getElementById('info-btn');
 if (infoBtn) {
