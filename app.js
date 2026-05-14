@@ -474,7 +474,7 @@ function updateBPMDisplay() {
 function updatePitch(delta) {
     if (!player) return;
     // Snap to nearest integer if it was a float from direct input, then add delta
-    currentPitch = Math.round(currentPitch) + delta;
+    currentPitch = (delta > 0 ? Math.floor(currentPitch) : Math.ceil(currentPitch)) + delta;
     currentPitch = Math.max(-24, Math.min(24, currentPitch));
 
     if (isSynced) {
@@ -521,16 +521,16 @@ syncToggle.addEventListener('click', () => {
     
     const wasPlaying = player && player.state === 'started';
     if (wasPlaying) {
-         playbackOffset += (Tone.context.currentTime - startTime) * currentTempo;
-         player.stop();
+        playbackOffset += (Tone.context.currentTime - startTime) * currentTempo;
     }
-    
+
     setupPlayer();
-    
+
     if (wasPlaying) {
-         player.start(0, playbackOffset);
-         startTime = Tone.context.currentTime;
-         if (!animationId) startUpdateLoop();
+        const delay = 0.05;
+        player.start(Tone.now() + delay, playbackOffset);
+        startTime = Tone.context.currentTime + delay;
+        if (!animationId) startUpdateLoop();
     }
 });
 
