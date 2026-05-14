@@ -442,9 +442,8 @@ function setupPlayer() {
 
 function applyPitchAndTempo() {
     if (!player) return;
-    
+
     if (isSynced) {
-        currentTempo = Math.pow(2, currentPitch / 12);
         player.playbackRate = currentTempo;
     } else {
         if (player.detune !== undefined) {
@@ -477,12 +476,16 @@ function updatePitch(delta) {
     // Snap to nearest integer if it was a float from direct input, then add delta
     currentPitch = Math.round(currentPitch) + delta;
     currentPitch = Math.max(-24, Math.min(24, currentPitch));
-    
+
+    if (isSynced) {
+        currentTempo = Math.pow(2, currentPitch / 12);
+    }
+
     if (player.state === 'started') {
         playbackOffset += (Tone.context.currentTime - startTime) * currentTempo;
         startTime = Tone.context.currentTime;
     }
-    
+
     applyPitchAndTempo();
 }
 
@@ -494,9 +497,8 @@ function updateTempo(delta) {
         startTime = Tone.context.currentTime;
     }
 
-    // Snap to nearest 0.1 if it was a custom float from direct input, then add delta
-    // Use toFixed to avoid floating point precision errors like 1.33 -> 1.2
-    let snapped = Math.round(currentTempo * 10) / 10;
+    // Snap to nearest 0.05 before applying delta to avoid floating point drift
+    let snapped = Math.round(currentTempo * 20) / 20;
     currentTempo = parseFloat((snapped + delta).toFixed(2));
     currentTempo = Math.max(0.5, Math.min(2.0, currentTempo));
 
