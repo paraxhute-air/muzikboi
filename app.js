@@ -453,7 +453,8 @@ function applyPitchAndTempo() {
         player.playbackRate = currentTempo;
     }
     
-    pitchValue.textContent = `${currentPitch > 0 ? '+' : ''}${currentPitch}`;
+    const pitchDisplay = Number.isInteger(currentPitch) ? currentPitch : currentPitch.toFixed(2);
+    pitchValue.textContent = `${currentPitch > 0 ? '+' : ''}${pitchDisplay}`;
     tempoValue.textContent = `${currentTempo.toFixed(2)}`;
     updateBPMDisplay();
 }
@@ -487,26 +488,30 @@ function updatePitch(delta) {
 
 function updateTempo(delta) {
     if (!player) return;
-    if (isSynced) return; 
-    
+
     if (player.state === 'started') {
         playbackOffset += (Tone.context.currentTime - startTime) * currentTempo;
         startTime = Tone.context.currentTime;
     }
-    
+
     // Snap to nearest 0.1 if it was a custom float from direct input, then add delta
     // Use toFixed to avoid floating point precision errors like 1.33 -> 1.2
     let snapped = Math.round(currentTempo * 10) / 10;
     currentTempo = parseFloat((snapped + delta).toFixed(2));
     currentTempo = Math.max(0.5, Math.min(2.0, currentTempo));
+
+    if (isSynced) {
+        currentPitch = Math.log2(currentTempo) * 12;
+    }
+
     applyPitchAndTempo();
 }
 
 // Control Listeners
 pitchUp.addEventListener('click', () => updatePitch(1));
 pitchDown.addEventListener('click', () => updatePitch(-1));
-tempoUp.addEventListener('click', () => updateTempo(0.1));
-tempoDown.addEventListener('click', () => updateTempo(-0.1));
+tempoUp.addEventListener('click', () => updateTempo(0.05));
+tempoDown.addEventListener('click', () => updateTempo(-0.05));
 
 syncToggle.addEventListener('click', () => {
     isSynced = !isSynced;
