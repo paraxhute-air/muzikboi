@@ -583,7 +583,7 @@ body.dragging-files .playlist-controls {
 .playlist-content {
     background-color: #000;
     color: var(--lcd-text);
-    height: 144px;
+    height: 216px;
     border: 3px solid var(--winamp-border-dark);
     box-shadow: 1px 1px 0 var(--winamp-border-light);
     margin-bottom: 8px;
