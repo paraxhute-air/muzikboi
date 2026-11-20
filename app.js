@@ -233,7 +233,8 @@ function handleFile(file) {
     playlist.push(file);
     renderPlaylist();
     if (currentPlaylistIndex === -1 || playlist.length === 1) {
-        loadPlaylistItem(0);
+        // 받지 않은 샘플이 앞에 있어도 방금 추가한 파일을 로드
+        loadPlaylistItem(playlist.length - 1);
     }
 }
 
@@ -246,9 +247,16 @@ function renderPlaylist() {
         const isPlaying = player && player.state === 'started';
         if (index === currentPlaylistIndex && isPlaying) div.classList.add('playing');
         if (index === selectedPlaylistIndex) div.classList.add('selected');
-        if (f.isPlaceholder) div.classList.add('loading-text');
-        
-        div.textContent = `${index + 1}. ${f.name}`;
+        if (f.isPlaceholder || f.isSample) div.classList.add('loading-text');
+
+        if (f.isSample) {
+            // 받지 않은 샘플: 오른쪽에 용량 또는 진행률 표시
+            const size = document.createElement('span');
+            size.className = 'pl-size';
+            size.textContent = f.progress != null ? `LOADING ${f.progress}%` : `↓ ${f.sizeMB.toFixed(1)}MB`;
+            div.appendChild(size);
+        }
+        div.appendChild(document.createTextNode(`${index + 1}. ${f.name}`));
         div.title = f.name;
         
         div.onclick = () => {
@@ -311,12 +319,11 @@ async function loadPlaylistItem(index) {
 
     currentPlaylistIndex = index;
     renderPlaylist();
-    const file = playlist[index];
-    
+    let file = playlist[index];
+
     const loadId = ++currentLoadId;
     isLoadingAudio = true;
 
-    currentFileSize = file.size;
     if (!hasEverPlayed) {
         // 아직 한 번도 재생 전: LCD는 Welcome 문구 유지
         lcdTrackName.classList.remove('loading-text');
@@ -327,6 +334,32 @@ async function loadPlaylistItem(index) {
     loadStatus.textContent = 'READY';
     loadStatus.classList.add('loaded'); // Make READY green/visible
     loadStatus.classList.remove('playing-status');
+
+    // 아직 받지 않은 샘플 곡이면 이 시점에 내려받는다
+    if (file.isSample) {
+        const entry = file;
+        try {
+            if (!entry.fetching) entry.fetching = fetchSample(entry);
+            file = await entry.fetching;
+        } catch (e) {
+            entry.fetching = null;
+            entry.progress = null;
+            console.error('Failed to load sample:', entry.name, e);
+            renderPlaylist();
+            if (loadId === currentLoadId) {
+                isLoadingAudio = false;
+                loadStatus.textContent = 'ERROR';
+                showCustomAlert(entry.name + ' 샘플을 불러오지 못했습니다.<br><br>네트워크 연결을 확인한 뒤 다시 시도해 주세요.');
+            }
+            return;
+        }
+        const pos = playlist.indexOf(entry);
+        if (pos !== -1) playlist[pos] = file;
+        renderPlaylist();
+        if (loadId !== currentLoadId) return;
+    }
+
+    currentFileSize = file.size;
 
     try {
         await initAudio();
@@ -713,7 +746,18 @@ function detectBPMBackground(buffer) {
 
 playBtn.addEventListener('click', async () => {
     await initAudio();
-    if (!player) return;
+    if (!player) {
+        // 아직 로드된 곡이 없고 선택한 곡이 받지 않은 샘플이면 받아서 재생
+        const target = selectedPlaylistIndex !== -1 ? selectedPlaylistIndex : Math.max(currentPlaylistIndex, 0);
+        if (playlist[target] && playlist[target].isSample && !isLoadingAudio) {
+            await loadPlaylistItem(target);
+            if (player) {
+                await player.loaded;
+                playBtn.click();
+            }
+        }
+        return;
+    }
 
     if (player.state !== 'started') {
         if (playbackOffset >= (audioBuffer ? audioBuffer.duration : 0)) playbackOffset = 0;
@@ -1420,42 +1464,49 @@ document.addEventListener('mouseup', () => {
     isDragging = false;
 });
 
-// ── Sample Songs Auto-Loading ────────────────────────────────────────────────
-async function loadSamples() {
+// ── Sample Songs (재생할 때만 내려받음) ─────────────────────────────────────────
+function loadSamples() {
     const sampleFiles = [
-        { url: 'samples/sample01.mp3', name: 'SampleSong_01' },
-        { url: 'samples/sample02.mp3', name: 'SampleSong_02' },
-        { url: 'samples/sample03.mp3', name: 'SampleSong_03' },
-        { url: 'samples/sample04.mp3', name: 'SampleSong_04' },
-        { url: 'samples/sample05.mp3', name: 'SampleSong_05' }
+        { url: 'samples/sample01.mp3', name: 'SampleSong_01', sizeMB: 5.2 },
+        { url: 'samples/sample02.mp3', name: 'SampleSong_02', sizeMB: 2.8 },
+        { url: 'samples/sample03.mp3', name: 'SampleSong_03', sizeMB: 6.2 },
+        { url: 'samples/sample04.mp3', name: 'SampleSong_04', sizeMB: 14.4 },
+        { url: 'samples/sample05.mp3', name: 'SampleSong_05', sizeMB: 4.1 }
     ];
 
     for (const s of sampleFiles) {
-        playlist.push({ isPlaceholder: true, name: s.name + '.mp3' });
+        playlist.push({ isSample: true, url: s.url, name: s.name + '.mp3', sizeMB: s.sizeMB, progress: null, fetching: null });
     }
     renderPlaylist();
+}
 
-    for (let i = 0; i < sampleFiles.length; i++) {
-        const s = sampleFiles[i];
-        try {
-            const resp = await fetch(s.url);
-            if (!resp.ok) continue;
-            const blob = await resp.blob();
-            const file = new File([blob], s.name + '.mp3', { type: 'audio/mpeg' });
-            
-            const targetIndex = playlist.findIndex(f => f.isPlaceholder && f.name === s.name + '.mp3');
-            if (targetIndex !== -1) {
-                playlist[targetIndex] = file;
-                renderPlaylist();
+// 샘플 한 곡을 진행률을 표시하며 내려받아 File로 반환
+async function fetchSample(entry) {
+    const isCurrent = () => playlist[currentPlaylistIndex] === entry;
+    entry.progress = 0;
+    renderPlaylist();
+    if (isCurrent()) loadStatus.textContent = 'LOADING 0%';
 
-                if (i === 0) {
-                    loadPlaylistItem(targetIndex);
-                }
-            }
-        } catch (e) {
-            console.error('Failed to load sample:', s.name, e);
+    const resp = await fetch(entry.url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const total = Number(resp.headers.get('content-length')) || entry.sizeMB * 1e6;
+    const reader = resp.body.getReader();
+    const chunks = [];
+    let received = 0;
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+        const pct = Math.min(99, Math.floor((received / total) * 100));
+        if (pct !== entry.progress) {
+            entry.progress = pct;
+            renderPlaylist();
+            if (isCurrent()) loadStatus.textContent = `LOADING ${pct}%`;
         }
     }
+    return new File(chunks, entry.name, { type: 'audio/mpeg' });
 }
 
 // Info Button Event

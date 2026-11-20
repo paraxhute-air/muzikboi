@@ -151,6 +151,12 @@ body {
     color: #666;
 }
 
+/* 받지 않은 샘플 곡의 용량·진행률 표시 */
+.pl-size {
+    float: right;
+    margin-left: 8px;
+}
+
 @keyframes marquee-scroll {
     0% { transform: translate(0, 0); }
     100% { transform: translate(-100%, 0); }
