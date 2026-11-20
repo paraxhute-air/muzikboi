@@ -1,5 +1,4 @@
 // UI Elements
-const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
 const lcdTrackName = document.getElementById('lcd-track-name');
 const lcdTrackContainer = document.querySelector('.lcd-track-container');
@@ -116,7 +115,6 @@ async function initAudio() {
 }
 
 // Event Listeners
-dropZone.addEventListener('click', () => fileInput.click());
 plAddBtn.addEventListener('click', () => fileInput.click());
 
 prevBtn.addEventListener('click', () => {
@@ -183,36 +181,48 @@ fileInput.addEventListener('change', (e) => {
     fileInput.value = ''; // reset
 });
 
-dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.classList.add('dragover');
+// 파일을 창 안으로 끌고 오면 플레이리스트 목록만 드롭 대상으로 강조하고,
+// 목록 밖에 놓으면 무시한다 (브라우저가 파일을 열어 페이지를 벗어나는 것도 막음)
+const playlistDropTarget = document.getElementById('playlist-content');
+let dragDepth = 0;
+let dragWatchdog = null;
+
+const isFileDrag = (e) => Array.from(e.dataTransfer.types).includes('Files');
+
+function endFileDrag() {
+    dragDepth = 0;
+    clearTimeout(dragWatchdog);
+    document.body.classList.remove('dragging-files');
+}
+
+document.addEventListener('dragenter', (e) => {
+    if (!isFileDrag(e)) return;
+    dragDepth++;
+    document.body.classList.add('dragging-files');
 });
 
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-
-dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('dragover');
-    if (e.dataTransfer.files.length > 0) {
-        for (let i = 0; i < e.dataTransfer.files.length; i++) {
-            handleFile(e.dataTransfer.files[i]);
-        }
-    }
+document.addEventListener('dragleave', (e) => {
+    if (!isFileDrag(e)) return;
+    dragDepth--;
+    if (dragDepth <= 0) endFileDrag();
 });
 
-const playlistContainer = document.querySelector('.winamp-playlist');
-playlistContainer.addEventListener('dragover', (e) => {
+document.addEventListener('dragover', (e) => {
+    if (!isFileDrag(e)) return;
     e.preventDefault();
-    playlistContainer.style.opacity = '0.7';
+    e.dataTransfer.dropEffect = playlistDropTarget.contains(e.target) ? 'copy' : 'none';
+    // dragleave가 누락돼도 드래그가 끝나면 안내가 남지 않도록
+    clearTimeout(dragWatchdog);
+    dragWatchdog = setTimeout(endFileDrag, 1000);
 });
-playlistContainer.addEventListener('dragleave', () => playlistContainer.style.opacity = '1');
-playlistContainer.addEventListener('drop', (e) => {
+
+document.addEventListener('drop', (e) => {
+    if (!isFileDrag(e)) return;
     e.preventDefault();
-    playlistContainer.style.opacity = '1';
-    if (e.dataTransfer.files.length > 0) {
-        for (let i = 0; i < e.dataTransfer.files.length; i++) {
-            handleFile(e.dataTransfer.files[i]);
-        }
+    endFileDrag();
+    if (!playlistDropTarget.contains(e.target)) return;
+    for (const file of e.dataTransfer.files) {
+        handleFile(file);
     }
 });
 

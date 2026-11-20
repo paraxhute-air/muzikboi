@@ -535,22 +535,36 @@ input[type="range"]#seek-bar::-webkit-slider-thumb {
     cursor: wait;
 }
 
-.winamp-drop {
-    margin-top: 15px;
-    padding: 30px 10px;
-    text-align: center;
-    border: 2px dashed var(--winamp-border-dark);
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    background-color: var(--winamp-bg);
+/* 파일 드래그 중: 플레이리스트 목록만 드롭 대상으로 강조하고 나머지는 어둡게 */
+.playlist-drop-area {
+    position: relative;
 }
 
-.winamp-drop.dragover {
-    background-color: #222;
+.playlist-drop-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 8px; /* .playlist-content의 margin-bottom 제외 */
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.75);
+    border: 3px solid var(--lcd-text);
     color: var(--lcd-text);
-    border-color: var(--lcd-text);
+    font-size: 14px;
+    font-weight: bold;
+    pointer-events: none; /* 드롭 이벤트는 아래 목록이 받음 */
+}
+
+body.dragging-files .playlist-drop-overlay {
+    display: flex;
+}
+
+body.dragging-files .winamp-main,
+body.dragging-files #playlist-header,
+body.dragging-files .playlist-controls {
+    filter: brightness(0.4);
 }
 
 /* Playlist Window */

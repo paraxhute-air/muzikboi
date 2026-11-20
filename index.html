@@ -131,8 +131,12 @@
                     <span class="close-x">×</span>
                 </div>
             </div>
-            <div class="playlist-content" id="playlist-content">
-                <!-- Playlist items go here -->
+            <div class="playlist-drop-area">
+                <div class="playlist-content" id="playlist-content">
+                    <!-- Playlist items go here -->
+                </div>
+                <!-- 파일을 창 안으로 끌고 올 때만 보이는 드롭 안내 -->
+                <div class="playlist-drop-overlay">↓ DROP HERE TO ADD ↓</div>
             </div>
             <div class="playlist-controls">
                 <button id="pl-add-btn" class="win-btn">ADD</button>
@@ -141,11 +145,6 @@
             </div>
         </div>
 
-        <div id="drop-zone" class="winamp-drop">
-            <p>DRAG & DROP AUDIO HERE</p>
-            <span style="font-size: 11px; color: #888; display: block; margin-top: 8px;">SUPPORTED: MP3, WAV, FLAC, OGG, AAC</span>
-        </div>
-        
         <!-- Custom Alert Modal -->
         <div id="custom-alert" class="glass" style="display: none;">
             <div class="winamp-header" style="justify-content: center; position: relative;">
